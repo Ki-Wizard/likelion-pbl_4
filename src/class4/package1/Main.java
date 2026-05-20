@@ -3,14 +3,14 @@ package class4.package1;
 import class4.role.Lion;
 import class4.role.Role;
 import class4.role.Staff;
+import class4.service.MemberService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
-    private static final List<Role> members = new ArrayList<>();
+    private static final MemberService memberService = new MemberService();
 
     public static void main(String[] args) {
         boolean running = true;
@@ -64,7 +64,7 @@ public class Main {
 
         String name = readRequiredText("이름: ");
 
-        if (existsByName(name)) {
+        if (memberService.existsByName(name)) {
             System.out.println("이미 등록된 이름입니다. 등록에 실패했습니다.");
             return;
         }
@@ -73,7 +73,7 @@ public class Main {
         int generation = readGeneration();
 
         Role member = createMember(roleType, name, part, generation);
-        members.add(member);
+        memberService.register(member);
         System.out.println("멤버 등록이 완료되었습니다.");
     }
 
@@ -89,12 +89,13 @@ public class Main {
         System.out.println();
         System.out.println("[전체 멤버 조회]");
 
-        if (members.isEmpty()) {
+        if (!memberService.hasMembers()) {
             System.out.println("등록된 멤버가 없습니다.");
             return;
         }
 
-        System.out.println("총 " + members.size() + "명의 멤버가 등록되어 있습니다.");
+        List<Role> members = memberService.findAll();
+        System.out.println("총 " + memberService.countMembers() + "명의 멤버가 등록되어 있습니다.");
         for (Role member : members) {
             System.out.println(member.getProfile());
         }
@@ -104,25 +105,14 @@ public class Main {
         System.out.println();
         System.out.println("[이름으로 멤버 검색]");
         String name = readRequiredText("검색할 이름: ");
+        Role member = memberService.findByName(name);
 
-        for (Role member : members) {
-            if (member.getName().equals(name)) {
-                System.out.println(member.getProfile());
-                return;
-            }
+        if (member == null) {
+            System.out.println("해당 이름의 멤버를 찾을 수 없습니다.");
+            return;
         }
 
-        System.out.println("해당 이름의 멤버를 찾을 수 없습니다.");
-    }
-
-    private static boolean existsByName(String name) {
-        for (Role member : members) {
-            if (member.getName().equals(name)) {
-                return true;
-            }
-        }
-
-        return false;
+        System.out.println(member.getProfile());
     }
 
     private static String readRequiredText(String prompt) {
